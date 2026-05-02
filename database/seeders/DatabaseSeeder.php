@@ -16,21 +16,24 @@ class DatabaseSeeder extends Seeder
     {
         // Criar usuário de teste
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Profissional MedIntera',
+            'email' => 'admin@medintera.com.br',
+            'password' => bcrypt('admin123'),
         ]);
 
-        // Criar medicamentos (isso criará as tabelas de lookup automaticamente via factory)
-        Medicamento::factory()->count(20)->create();
+        // Importar Base de Dados Real
+        $this->call(MedicamentoBaseSeeder::class);
 
-        // Criar algumas interações entre medicamentos existentes
-        $medicamentos = Medicamento::all();
-
-        for ($i = 0; $i < 10; $i++) {
-            MedicamentoInteracao::factory()->create([
-                'medicamento_origem' => $medicamentos->random()->id_medicamento,
-                'medicamento_alvo' => $medicamentos->random()->id_medicamento,
-            ]);
-        }
+        // // Criar algumas interações entre medicamentos existentes se houver dados
+        // $medicamentos = Medicamento::all();
+        //
+        // if ($medicamentos->count() >= 2) {
+        //     for ($i = 0; $i < 10; $i++) {
+        //         MedicamentoInteracao::factory()->create([
+        //             'medicamento_origem' => $medicamentos->random()->id_medicamento,
+        //             'medicamento_alvo' => $medicamentos->random()->id_medicamento,
+        //         ]);
+        //     }
+        // }
     }
 }
