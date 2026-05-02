@@ -16,9 +16,6 @@ use Spatie\SimpleExcel\SimpleExcelReader;
 
 class MedicamentoImportService
 {
-    /**
-     * Importa medicamentos de um arquivo Excel ou CSV.
-     */
     public function import(string $path, ?string $extension = null): array
     {
         $reader = SimpleExcelReader::create($path, $extension ?? '');
@@ -29,90 +26,88 @@ class MedicamentoImportService
         DB::transaction(function () use ($rows, &$importedCount, &$errors) {
             foreach ($rows as $index => $row) {
                 try {
-                    // Normalização de chaves e limpeza de valores
-                    $row = array_change_key_case(array_map(function($val) {
-                        return is_string($val) ? trim($val) : $val;
-                    }, (array) $row), CASE_LOWER);
+                    $row = (array) $row;
 
-                    $nomeComercial = $row['nome comercial'] ?? $row['nome_comercial'] ?? null;
-                    
+                    // 1. Nome Comercial (Obrigatório)
+                    $nomeComercial = $row['nome comercial'] ?? $row['Nome Comercial'] ?? $row['medicamento'] ?? null;
+
                     if (!$nomeComercial) {
-                        $errors[] = "Linha " . ($index + 1) . ": Nome Comercial é obrigatório.";
+                        $errors[] = "Linha " . ($index + 1) . ": Coluna 'nome comercial' não encontrada.";
                         continue;
                     }
 
-                    // 1. Princípio Ativo (Fármaco)
+                    // 2. Fármaco / Princípio Ativo
                     $idPrincipioAtivo = null;
-                    $nomePrincipio = $row['fármaco'] ?? $row['princípio ativo'] ?? $row['principio_ativo'] ?? null;
+                    $nomePrincipio = $row['fármaco'] ?? $row['farmaco'] ?? $row['princípio ativo'] ?? $row['Princípio Ativo'] ?? null;
                     if ($nomePrincipio) {
-                        $principio = PrincipioAtivo::firstOrCreate(['nome_principio_ativo' => $nomePrincipio]);
+                        $principio = PrincipioAtivo::firstOrCreate(['nome_principio_ativo' => trim($nomePrincipio)]);
                         $idPrincipioAtivo = $principio->id_principio_ativo;
                     }
 
-                    // 2. Classificação
+                    // 3. Classificação
                     $idClassificacao = null;
-                    $nomeClasse = $row['classificação'] ?? $row['classificacao'] ?? null;
+                    $nomeClasse = $row['classificação'] ?? $row['classificacao'] ?? $row['Classificação'] ?? null;
                     if ($nomeClasse) {
-                        $classe = ClassificacaoMedicamento::firstOrCreate(['classificacao' => $nomeClasse]);
+                        $classe = ClassificacaoMedicamento::firstOrCreate(['classificacao' => trim($nomeClasse)]);
                         $idClassificacao = $classe->id_classificacao;
                     }
 
-                    // 3. Sintomatologia
+                    // 4. Sintomatologia
                     $idSintomatologia = null;
-                    $sintoma = $row['sintomatologia'] ?? null;
+                    $sintoma = $row['sintomatologia'] ?? $row['Sintomatologia'] ?? null;
                     if ($sintoma) {
                         $sintoma = $this->translateClinicalSymbols($sintoma);
-                        $obj = Sintomatologia::firstOrCreate(['descricao' => $sintoma]);
+                        $obj = Sintomatologia::firstOrCreate(['descricao' => trim($sintoma)]);
                         $idSintomatologia = $obj->id_sintomatologia;
                     }
 
-                    // 4. Alterações Laboratoriais
+                    // 5. Alterações Laboratoriais
                     $idAltLab = null;
-                    $alteracao = $row['alterações'] ?? $row['alteracoes'] ?? null;
+                    $alteracao = $row['alterações laboratoriais'] ?? $row['Alterações laboratoriais'] ?? $row['alterações'] ?? $row['alteracoes'] ?? null;
                     if ($alteracao) {
                         $alteracao = $this->translateClinicalSymbols($alteracao);
-                        $obj = AlteracaoLaboratorial::firstOrCreate(['descricao' => $alteracao]);
+                        $obj = AlteracaoLaboratorial::firstOrCreate(['descricao' => trim($alteracao)]);
                         $idAltLab = $obj->id_alt_lab;
                     }
 
-                    // 5. Interação (Base / Alimentos / Geral)
+                    // 6. Interação Geral
                     $idInteracaoBase = null;
-                    $interacaoTxt = $row['interação'] ?? $row['interacao'] ?? null;
+                    $interacaoTxt = $row['interação'] ?? $row['interacao'] ?? $row['Interação'] ?? null;
                     if ($interacaoTxt) {
                         $interacaoTxt = $this->translateClinicalSymbols($interacaoTxt);
-                        $obj = Interacao::firstOrCreate(['descricao' => $interacaoTxt]);
+                        $obj = Interacao::firstOrCreate(['descricao' => trim($interacaoTxt)]);
                         $idInteracaoBase = $obj->id_interacao;
                     }
 
-                    // 6. Ação Medicina
+                    // 7. Ação Medicina
                     $idAcaoMed = null;
-                    $acaoMed = $row['ação com os médicos'] ?? $row['acao_medicina'] ?? null;
+                    $acaoMed = $row['ação com os médicos'] ?? $row['acao com os medicos'] ?? null;
                     if ($acaoMed) {
                         $acaoMed = $this->translateClinicalSymbols($acaoMed);
-                        $obj = AcaoMedicina::firstOrCreate(['descricao' => $acaoMed]);
+                        $obj = AcaoMedicina::firstOrCreate(['descricao' => trim($acaoMed)]);
                         $idAcaoMed = $obj->id_acao_med;
                     }
 
-                    // 7. Ação Nutrição
+                    // 8. Ação Nutrição
                     $idAcaoNut = null;
-                    $acaoNut = $row['ação com a nutrição'] ?? $row['acao_nutricao'] ?? null;
+                    $acaoNut = $row['ação com a nutrição'] ?? $row['acao com a nutricao'] ?? null;
                     if ($acaoNut) {
                         $acaoNut = $this->translateClinicalSymbols($acaoNut);
-                        $obj = AcaoNutricao::firstOrCreate(['descricao' => $acaoNut]);
+                        $obj = AcaoNutricao::firstOrCreate(['descricao' => trim($acaoNut)]);
                         $idAcaoNut = $obj->id_acao_nut;
                     }
 
-                    // 8. Ação Enfermagem
+                    // 9. Ação Enfermagem (Condutas Enfermagem)
                     $idAcaoEnf = null;
-                    $acaoEnf = $row['ação com a enfermagem'] ?? $row['acao_enfermagem'] ?? null;
+                    $acaoEnf = $row['ação com a enfermagem'] ?? $row['acao com a enfermagem'] ?? null;
                     if ($acaoEnf) {
                         $acaoEnf = $this->translateClinicalSymbols($acaoEnf);
-                        $obj = AcaoEnfermagem::firstOrCreate(['descricao' => $acaoEnf]);
+                        $obj = AcaoEnfermagem::firstOrCreate(['descricao' => trim($acaoEnf)]);
                         $idAcaoEnf = $obj->id_acao_enf;
                     }
 
                     Medicamento::create([
-                        'nome_comercial' => $nomeComercial,
+                        'nome_comercial' => trim($nomeComercial),
                         'id_principio_ativo' => $idPrincipioAtivo,
                         'id_classificacao' => $idClassificacao,
                         'id_sintomatologia' => $idSintomatologia,
@@ -121,7 +116,7 @@ class MedicamentoImportService
                         'id_acao_med' => $idAcaoMed,
                         'id_acao_nut' => $idAcaoNut,
                         'id_acao_enf' => $idAcaoEnf,
-                        'observacoes' => $row['observações'] ?? $row['observacoes'] ?? null,
+                        'observacoes' => is_string($row['observações'] ?? null) ? trim($row['observações']) : null,
                     ]);
 
                     $importedCount++;
@@ -137,9 +132,6 @@ class MedicamentoImportService
         ];
     }
 
-    /**
-     * Converte símbolos clínicos comuns em texto amigável para busca e leitura.
-     */
     private function translateClinicalSymbols(string $text): string
     {
         $replacements = [
@@ -153,10 +145,7 @@ class MedicamentoImportService
             '-' => 'Ausência de ',
         ];
 
-        // Substituir os símbolos
         $text = str_replace(array_keys($replacements), array_values($replacements), $text);
-        
-        // Limpeza de espaços duplos resultantes das substituições
         return preg_replace('/\s+/', ' ', trim($text));
     }
 }
