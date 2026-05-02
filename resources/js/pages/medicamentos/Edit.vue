@@ -1,6 +1,27 @@
+<script lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { index as medicamentosIndex, update as medicamentosUpdate } from '@/routes/medicamentos';
+
+export default {
+    layout: (h: any, page: any) => {
+        return h(AppLayout, {
+            breadcrumbs: [
+                {
+                    title: 'Medicamentos',
+                    href: medicamentosIndex().url,
+                },
+                {
+                    title: 'Editar ' + page.props.medicamento.nome_comercial,
+                    href: '#',
+                },
+            ],
+        }, () => page);
+    },
+};
+</script>
+
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { index as medicamentosIndex, update as medicamentosUpdate } from '@/routes/medicamentos';
 import InputError from '@/components/InputError.vue';
 
 interface LookupItem {
@@ -56,21 +77,6 @@ const form = useForm({
     id_acao_nut: props.medicamento.id_acao_nut || '',
     id_acao_enf: props.medicamento.id_acao_enf || '',
     observacoes: props.medicamento.observacoes || '',
-});
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Medicamentos',
-                href: medicamentosIndex(),
-            },
-            {
-                title: 'Editar ' + props.medicamento.nome_comercial,
-                href: '#',
-            },
-        ],
-    },
 });
 
 function submit() {

@@ -1,7 +1,27 @@
+<script lang="ts">
+import AppLayout from '@/layouts/AppLayout.vue';
+import { show as medicamentosShow, index as medicamentosIndex } from '@/routes/medicamentos';
+
+export default {
+    layout: (h: any, page: any) => {
+        return h(AppLayout, {
+            breadcrumbs: [
+                {
+                    title: 'Medicamentos',
+                    href: medicamentosIndex().url,
+                },
+                {
+                    title: page.props.medicamento.nome_comercial,
+                    href: medicamentosShow(page.props.medicamento.id_medicamento).url,
+                },
+            ],
+        }, () => page);
+    },
+};
+</script>
+
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { index as medicamentosIndex } from '@/routes/medicamentos';
-import { show as medicamentosShow } from '@/routes/medicamentos';
 
 interface Props {
     medicamento: {
@@ -27,21 +47,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Medicamentos',
-                href: medicamentosIndex(),
-            },
-            {
-                title: props.medicamento.nome_comercial,
-                href: medicamentosShow(props.medicamento.id_medicamento),
-            },
-        ],
-    },
-});
 </script>
 
 <template>

@@ -32,6 +32,21 @@ interface Props {
 
 defineProps<Props>();
 
+defineOptions({
+    layout: {
+        breadcrumbs: [
+            {
+                title: 'Medicamentos',
+                href: medicamentosIndex().url,
+            },
+            {
+                title: 'Novo Medicamento',
+                href: '#',
+            },
+        ],
+    },
+});
+
 const form = useForm({
     nome_comercial: '',
     id_principio_ativo: '',
@@ -43,21 +58,6 @@ const form = useForm({
     id_acao_nut: '',
     id_acao_enf: '',
     observacoes: '',
-});
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Medicamentos',
-                href: medicamentosIndex(),
-            },
-            {
-                title: 'Novo Medicamento',
-                href: '#',
-            },
-        ],
-    },
 });
 
 function submit() {

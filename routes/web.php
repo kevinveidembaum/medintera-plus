@@ -5,13 +5,13 @@ use App\Http\Controllers\MedicamentoInteracaoController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
-Route::inertia('/', 'Welcome', [
-    'canRegister' => Features::enabled(Features::registration()),
-])->name('home');
+Route::get('/', function () {
+    return auth()->check() 
+        ? redirect()->route('medicamentos.index') 
+        : inertia('Welcome', ['canRegister' => Features::enabled(Features::registration())]);
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
-    
     Route::get('medicamentos/export/excel', [MedicamentoController::class, 'exportExcel'])->name('medicamentos.export.excel');
     Route::get('medicamentos/export/pdf', [MedicamentoController::class, 'exportPdf'])->name('medicamentos.export.pdf');
     Route::post('medicamentos/import', [MedicamentoController::class, 'import'])->name('medicamentos.import');

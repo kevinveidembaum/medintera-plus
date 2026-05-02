@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { index as medicamentosIndex, show as medicamentosShow, create as medicamentosCreate, edit as medicamentosEdit, destroy as medicamentosDestroy, exportExcel as medicamentosExportExcel, exportPdf as medicamentosExportPdf, import as medicamentosImport } from '@/routes/medicamentos';
+import medicamentosRoutes from '@/routes/medicamentos';
+import { excel as exportExcelRoute, pdf as exportPdfRoute } from '@/routes/medicamentos/export';
 import { FileDown, FileUp, FileSpreadsheet, FileText, Pill } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import throttle from 'lodash/throttle';
@@ -36,7 +37,7 @@ defineOptions({
         breadcrumbs: [
             {
                 title: 'Medicamentos',
-                href: medicamentosIndex(),
+                href: medicamentosRoutes.index().url,
             },
         ],
     },
@@ -46,7 +47,7 @@ watch(
     [search, classificacao],
     throttle(() => {
         router.get(
-            medicamentosIndex().url,
+            medicamentosRoutes.index().url,
             { search: search.value, classificacao: classificacao.value },
             { preserveState: true, replace: true }
         );
@@ -60,23 +61,23 @@ function clearFilters() {
 
 function deleteMedicamento(id: number) {
     if (confirm('Tem certeza que deseja excluir este medicamento?')) {
-        router.delete(medicamentosDestroy(id).url);
+        router.delete(medicamentosRoutes.destroy(id).url);
     }
 }
 
 function exportExcel() {
-    window.location.href = medicamentosExportExcel({ query: { search: search.value, classificacao: classificacao.value } }).url;
+    window.location.href = exportExcelRoute({ query: { search: search.value, classificacao: classificacao.value } }).url;
 }
 
 function exportPdf() {
-    window.location.href = medicamentosExportPdf({ query: { search: search.value, classificacao: classificacao.value } }).url;
+    window.location.href = exportPdfRoute({ query: { search: search.value, classificacao: classificacao.value } }).url;
 }
 
 const importFile = ref<File | null>(null);
 function handleImport(event: any) {
     const file = event.target.files[0];
     if (file) {
-        router.post(medicamentosImport().url, { file }, {
+        router.post(medicamentosRoutes.import().url, { file }, {
             forceFormData: true,
             onSuccess: () => {
                 event.target.value = '';
@@ -122,7 +123,7 @@ function handleImport(event: any) {
                     </label>
 
                     <Link
-                        :href="medicamentosCreate().url"
+                        :href="medicamentosRoutes.create().url"
                         class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
                     >
                         <Pill class="h-4 w-4" />
@@ -188,14 +189,14 @@ function handleImport(event: any) {
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-3">
                                     <Link 
-                                        :href="medicamentosShow(med.id_medicamento).url"
+                                        :href="medicamentosRoutes.show(med.id_medicamento).url"
                                         class="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
                                     >
                                         Ver
                                     </Link>
                                     <Link 
-                                        :href="medicamentosEdit(med.id_medicamento).url"
-                                        class="font-medium text-zinc-600 hover:text-zinc-500 dark:text-zinc-400"
+                                        :href="medicamentosRoutes.edit(med.id_medicamento).url"
+                                        class="font-medium text-zinc-600 hover:text-zinc-50 dark:text-zinc-400"
                                     >
                                         Editar
                                     </Link>
