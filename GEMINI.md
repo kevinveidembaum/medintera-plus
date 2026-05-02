@@ -493,3 +493,70 @@ descricao TEXT
 );
 -- Fim do script
 ```
+
+## A Estrutura Recomendada para o MedIntera+
+
+- Controller (O "Policial de Trânsito")
+  No Laravel com Inertia, o Controller tem um papel simples:
+
+Receber a requisição do Frontend (Vue.js).
+
+Validar os dados de entrada.
+
+Chamar o Service necessário.
+
+Retornar a resposta usando Inertia::render().
+
+- Service (O "Cérebro")
+  Aqui é onde a mágica acontece. O Service cuidará da lógica de negócio mencionada no seu projeto, como cruzar medicamentos com sintomas ou interações.
+
+Vantagem no TDD: Você pode criar um teste unitário para o MedicineSearchService sem precisar simular uma requisição HTTP inteira. Você apenas testa se a lógica de busca retorna os dados corretos da planilha.
+
+- Model (A "Identidade")
+  O Model define apenas os relacionamentos (como belongsTo ou hasMany) entre o medicamento e suas interações ou ações de enfermagem/medicina.
+
+Exemplo Prático de Fluxo (Pesquisa de Medicamento)
+Imagine que o usuário pesquise por um sintoma no Vue.js para ver quais medicamentos podem causá-lo:
+
+Frontend (Vue.js): Envia uma requisição via Inertia para /search?query=nausea.
+
+Controller:
+
+PHP
+
+```php
+
+public function index(Request $request, MedicineSearchService $service)
+{
+    // O Controller pede ao Service para processar a lógica
+    $results = $service->searchBySymptom($request->query('query'));
+
+    return Inertia::render('Medicine/Search', [
+        'results' => $results
+    ]);
+
+}
+```
+
+- **Service:**
+
+    ```php
+    public function searchBySymptom(string $symptom)
+    {
+        // Aqui fica a lógica complexa de Query Builder ou Eloquent
+        return Medicine::whereHas('sintomatologia', function($q) use ($symptom) {
+            $q->where('descricao', 'like', "%{$symptom}%");
+        })->with(['interacao', 'acao_nutricao'])->get();
+    }
+    ```
+
+### Como isso se encaixa no seu TDD?
+
+Como você quer **cobertura total e uso de Mocks**, essa separação é perfeita:
+
+- **Teste de Feature:** Você testa a rota `/search`. Você pode **mockar** o `MedicineSearchService` para retornar dados falsos e apenas garantir que o Controller está enviando as propriedades corretas para o componente Vue.
+- **Teste de Unidade:** Você testa o `MedicineSearchService` diretamente com o banco de dados de teste (PostgreSQL no Docker) para garantir que a lógica de filtro baseada na planilha está funcionando[cite: 1].
+
+### Resumo do Alicerce Técnico
+
+Para o seu **GEMINI.md**, você pode adicionar que a arquitetura seguirá o padrão **Service Layer**. Isso ajudará o agente de IA a não poluir seus Controllers e a focar na criação de classes de serviço reutilizáveis para cada grande funcionalidade [Busca, Importação, Relatórios](cite: 1).
