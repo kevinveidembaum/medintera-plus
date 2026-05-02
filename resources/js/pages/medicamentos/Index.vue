@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { index as medicamentosIndex, show as medicamentosShow, create as medicamentosCreate, edit as medicamentosEdit, destroy as medicamentosDestroy } from '@/routes/medicamentos';
+import { index as medicamentosIndex, show as medicamentosShow, create as medicamentosCreate, edit as medicamentosEdit, destroy as medicamentosDestroy, exportExcel as medicamentosExportExcel, exportPdf as medicamentosExportPdf, import as medicamentosImport } from '@/routes/medicamentos';
+import { FileDown, FileUp, FileSpreadsheet, FileText, Pill } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import throttle from 'lodash/throttle';
 
@@ -62,6 +63,28 @@ function deleteMedicamento(id: number) {
         router.delete(medicamentosDestroy(id).url);
     }
 }
+
+function exportExcel() {
+    window.location.href = medicamentosExportExcel({ query: { search: search.value, classificacao: classificacao.value } }).url;
+}
+
+function exportPdf() {
+    window.location.href = medicamentosExportPdf({ query: { search: search.value, classificacao: classificacao.value } }).url;
+}
+
+const importFile = ref<File | null>(null);
+function handleImport(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+        router.post(medicamentosImport().url, { file }, {
+            forceFormData: true,
+            onSuccess: () => {
+                event.target.value = '';
+                importFile.value = null;
+            }
+        });
+    }
+}
 </script>
 
 <template>
@@ -74,12 +97,38 @@ function deleteMedicamento(id: number) {
                     <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Busca de Medicamentos</h1>
                     <p class="text-sm text-zinc-500 dark:text-zinc-400">Pesquise por nome, princípio ativo ou filtre por classe.</p>
                 </div>
-                <Link
-                    :href="medicamentosCreate().url"
-                    class="inline-flex items-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
-                >
-                    Novo Medicamento
-                </Link>
+                <div class="flex flex-wrap gap-2">
+                    <!-- Exportação -->
+                    <button
+                        @click="exportExcel"
+                        class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        <FileSpreadsheet class="h-4 w-4" />
+                        Excel
+                    </button>
+                    <button
+                        @click="exportPdf"
+                        class="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                        <FileText class="h-4 w-4" />
+                        PDF
+                    </button>
+
+                    <!-- Importação (Invisível acionada por label) -->
+                    <label class="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                        <FileUp class="h-4 w-4" />
+                        Importar
+                        <input type="file" @change="handleImport" class="hidden" accept=".xlsx,.xls,.csv" />
+                    </label>
+
+                    <Link
+                        :href="medicamentosCreate().url"
+                        class="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                    >
+                        <Pill class="h-4 w-4" />
+                        Novo Medicamento
+                    </Link>
+                </div>
             </div>
 
             <!-- Filtros -->

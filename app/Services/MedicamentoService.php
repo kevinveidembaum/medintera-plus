@@ -24,8 +24,24 @@ class MedicamentoService
      */
     public function search(array $filters): LengthAwarePaginator
     {
+        return $this->getSearchQuery($filters)->paginate(10)->withQueryString();
+    }
+
+    /**
+     * Retorna a coleção completa de medicamentos baseada nos filtros (para exportação).
+     */
+    public function getAllForExport(array $filters): Collection
+    {
+        return $this->getSearchQuery($filters)->get();
+    }
+
+    /**
+     * Centraliza a lógica da query de busca.
+     */
+    private function getSearchQuery(array $filters): \Illuminate\Database\Eloquent\Builder
+    {
         $query = Medicamento::query()
-            ->with(['principioAtivo', 'classificacao']);
+            ->with(['principioAtivo', 'classificacao', 'sintomatologia', 'alteracaoLaboratorial']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -47,7 +63,7 @@ class MedicamentoService
             $query->where('id_classificacao', $filters['classificacao']);
         }
 
-        return $query->paginate(10)->withQueryString();
+        return $query;
     }
 
     /**

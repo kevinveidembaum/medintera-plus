@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMedicamentoRequest;
 use App\Models\Medicamento;
+use App\Services\MedicamentoExportService;
+use App\Services\MedicamentoImportService;
 use App\Services\MedicamentoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MedicamentoController extends Controller
 {
     public function __construct(
-        protected MedicamentoService $medicamentoService
+        protected MedicamentoService $medicamentoService,
+        protected MedicamentoExportService $exportService,
+        protected MedicamentoImportService $importService
     ) {}
 
     /**
@@ -90,5 +95,54 @@ class MedicamentoController extends Controller
 
         return redirect()->route('medicamentos.index')
             ->with('status', 'Medicamento excluído com sucesso!');
+    }
+
+    /**
+     * Exporta os medicamentos para Excel.
+     */
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $medicamentos = $this->medicamentoService->getAllForExport($request->all());
+        $tempPath = storage_path('app/public/medicamentos_export.xlsx');
+        
+        $this->exportService->exportExcel($medicamentos, $tempPath);
+
+        return response()->download($tempPath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Exporta os medicamentos para PDF.
+     */
+    public function exportPdf(Request $request): \Illuminate\Http\Response
+    {
+        $medicamentos = $this->medicamentoService->getAllForExport($request->all());
+        $pdfContent = $this->exportService->exportPdf($medicamentos);
+
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="medicamentos_medintera.pdf"');
+    }
+
+    /**
+     * Importa medicamentos de um arquivo.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt'],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->getRealPath();
+        $extension = $file->getClientOriginalExtension();
+        
+        $result = $this->importService->import($path, $extension);
+
+        $status = "Importação concluída: {$result['success']} registros importados.";
+        if (count($result['errors']) > 0) {
+            $status .= " Houve alguns erros nas linhas: " . implode(', ', array_slice($result['errors'], 0, 3)) . "...";
+        }
+
+        return redirect()->back()->with('status', $status);
     }
 }
