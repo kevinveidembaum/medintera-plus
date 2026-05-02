@@ -1,0 +1,22 @@
+services:
+  database:
+    image: 'postgres:15-alpine' # Versão estável e leve
+    container_name: medintera_db
+    ports:
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      - 'medintera_postgres_data:/var/lib/postgresql/data'
+    networks:
+      - medintera_network
+
+networks:
+  medintera_network:
+    driver: bridge
+
+volumes:
+  medintera_postgres_data:
+    driver: local
