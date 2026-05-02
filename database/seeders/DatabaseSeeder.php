@@ -20,20 +20,11 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@medintera.com.br',
             'password' => bcrypt('admin123'),
         ]);
+// Importar Base de Dados Real
+$this->call(MedicamentoBaseSeeder::class);
 
-        // Importar Base de Dados Real
-        $this->call(MedicamentoBaseSeeder::class);
-
-        // // Criar algumas interações entre medicamentos existentes se houver dados
-        // $medicamentos = Medicamento::all();
-        //
-        // if ($medicamentos->count() >= 2) {
-        //     for ($i = 0; $i < 10; $i++) {
-        //         MedicamentoInteracao::factory()->create([
-        //             'medicamento_origem' => $medicamentos->random()->id_medicamento,
-        //             'medicamento_alvo' => $medicamentos->random()->id_medicamento,
-        //         ]);
-        //     }
+// Importar Interações Clínicas Reais
+$this->call(MedicamentoInteracaoRealSeeder::class);
         // }
     }
 }
