@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Medicamento;
+use App\Models\MedicamentoInteracao;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +14,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Criar usuário de teste
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Profissional MedIntera',
+            'email' => 'admin@medintera.com.br',
+            'password' => bcrypt('admin123'),
         ]);
+// Importar Interações Base (Categorias)
+$this->call(InteracaoBaseSeeder::class);
+
+// Importar Base de Dados Real
+$this->call(MedicamentoBaseSeeder::class);
+// Importar Interações Clínicas Reais
+$this->call(MedicamentoInteracaoRealSeeder::class);
+        // }
     }
 }
