@@ -24,7 +24,7 @@ class MedicamentoService
      */
     public function search(array $filters): LengthAwarePaginator
     {
-        return $this->getSearchQuery($filters)->paginate(10)->withQueryString();
+        return $this->getSearchQuery($filters)->paginate(25)->withQueryString();
     }
 
     /**

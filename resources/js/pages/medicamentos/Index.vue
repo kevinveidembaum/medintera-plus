@@ -218,23 +218,34 @@ function handleImport(event: any) {
                 </table>
             </div>
 
-            <!-- Paginação (Simplificada) -->
-            <div v-if="medicamentos.links.length > 3" class="mt-6 flex items-center justify-between">
-                <div class="text-xs text-zinc-500">
-                    Mostrando {{ medicamentos.data.length }} resultados
+            <!-- Paginação Detalhada -->
+            <div v-if="medicamentos.links.length > 3" class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-zinc-100 pt-6 md:flex-row dark:border-zinc-800">
+                <div class="text-sm text-zinc-500 dark:text-zinc-400">
+                    Mostrando <span class="font-medium text-zinc-900 dark:text-white">{{ (medicamentos as any).from }}</span> a 
+                    <span class="font-medium text-zinc-900 dark:text-white">{{ (medicamentos as any).to }}</span> de 
+                    <span class="font-medium text-zinc-900 dark:text-white">{{ (medicamentos as any).total }}</span> medicamentos
                 </div>
-                <div class="flex gap-2">
+                <nav class="flex flex-wrap justify-center gap-1">
                     <template v-for="(link, k) in medicamentos.links" :key="k">
-                        <component
-                            :is="link.url ? 'Link' : 'span'"
+                        <Link
                             v-if="link.url"
                             :href="link.url"
                             v-html="link.label"
-                            class="rounded-md border border-zinc-200 px-3 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                            :class="{ 'bg-primary-500 text-white border-primary-500 hover:bg-primary-600': link.active }"
+                            class="flex min-w-[2.5rem] items-center justify-center rounded-lg border px-3 py-2 text-sm transition-all"
+                            :class="{
+                                'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900 dark:border-white font-bold': link.active,
+                                'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700': !link.active,
+                            }"
+                            preserve-scroll
+                            preserve-state
+                        />
+                        <span
+                            v-else
+                            v-html="link.label"
+                            class="flex min-w-[2.5rem] items-center justify-center rounded-lg border border-zinc-100 px-3 py-2 text-sm text-zinc-300 cursor-not-allowed dark:text-zinc-600 dark:border-zinc-800"
                         />
                     </template>
-                </div>
+                </nav>
             </div>
         </div>
     </div>
