@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('alteracao_laboratorial', function (Blueprint $table) {
             $table->id('id_alt_lab');
-            $table->string('descricao', 300);
+            $table->text('descricao');
             $table->timestamps();
         });
     }

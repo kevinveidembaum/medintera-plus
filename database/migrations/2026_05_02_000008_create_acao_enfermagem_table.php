@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('acao_enfermagem', function (Blueprint $table) {
             $table->id('id_acao_enf');
-            $table->string('descricao', 1000);
+            $table->text('descricao');
             $table->timestamps();
         });
     }
